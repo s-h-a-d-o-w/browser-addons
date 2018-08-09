@@ -1,0 +1,34 @@
+{
+  "manifest_version": 2,
+  "name": "Bandcamp Radio",
+  "version": "1.0",
+
+  "description": "Shuffle/random all songs of a list of albums.",
+
+  "permissions" : [
+    "storage"
+  ],
+
+  "icons": {
+    "16": "assets/icon16.png",
+    "32": "assets/icon32.png",
+    "48": "assets/icon48.png",
+    "96": "assets/icon96.png",
+    "128": "assets/icon128.png"
+  },
+
+  "background" : {
+    "scripts": [
+      "hot-reload.js"
+    ]
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.bandcamp.com/*"],
+      "js": ["bandcamp-radio.js"]
+    }
+  ],
+
+  "web_accessible_resources": ["assets/icon48.png"]
+}

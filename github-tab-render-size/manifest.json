@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "GitHub tab render size",
+  "version": "1.0",
+
+  "description": "Adds a red border to all webpages matching mozilla.org.",
+
+  "icons": {
+    "32": "spotify-ad-blocker_32x32.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.github.com/*"],
+      "js": ["github-tab-render-size.user.js"]
+    }
+  ],
+  
+  "web_accessible_resources": ["spotify-ad-blocker_32x32.png"]
+}

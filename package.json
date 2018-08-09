@@ -1,0 +1,12 @@
+{
+  "name": "browser-addons",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/s-h-a-d-o-w/browser-addons.git",
+  "author": "Andreas Opferkuch <s-h-a-d-o-w@users.noreply.github.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "find": "^0.2.9",
+    "sharp": "^0.20.5"
+  }
+}
