@@ -1,5 +1,35 @@
 'use strict';
 
+chrome.runtime.onMessage.addListener(
+	function(request, sender, sendResponse) {
+
+		switch(request.cmd) {
+			case 'GET_ALBUMS_LIST':
+				if(document.body.innerHTML.indexOf("/album/") < document.body.innerHTML.lastIndexOf("/album/")) {
+					sendResponse(getAlbumList());
+				}
+				else {
+					sendResponse('No albums on this page.');
+				}
+				break;
+			case 'PLAY':
+				radio.tabid = request.tabid;
+				play();
+				break;
+			case 'SKIP':
+				skip();
+				break;
+			case 'STOP':
+				stop();
+				break;
+			case 'BLOCK':
+				block();
+				break;
+		}
+	}
+);
+
+
 // Unify FF and Chrome
 // =======================================================
 let runtime = typeof browser === 'undefined' ? chrome.runtime : browser;
@@ -19,6 +49,16 @@ function removeItem(key, cb) {
 
 let radio = {};
 
+
+function getAlbumList() {
+	let albums = {};
+	for(let link of document.getElementsByTagName('a')) {
+		if(link.href.indexOf('/album/') > 0 && link.href.indexOf('bandcamp.com') > 0) {
+			albums[link.href] = null;
+		}
+	}
+	return albums;
+}
 
 function navigateToRandomAlbum() {
 	let albumLinks = Object.keys(radio.albums);
@@ -45,6 +85,23 @@ function waitForTrackEnd(audioEl) {
 	}
 }
 
+function block() {
+	getItem('blocked', (values) => {
+		let blocked = values.blocked || [];
+		blocked.push(window.location.href);
+		setItem('blocked', blocked, () => {
+			delete radio.albums[window.location.href];
+			skip();
+		})
+	});
+}
+
+function play() {
+	radio.origin = window.location.href;
+	radio.albums = getAlbumList();
+
+	navigateToRandomAlbum();
+}
 function addPlay() {
 	let controls = document.createElement('div');
 	controls.style.cssText = `
@@ -59,23 +116,15 @@ function addPlay() {
 
 	controls.innerHTML = "Play";
 
-	controls.addEventListener('click', () => {
-		radio.origin = window.location.href;
-		radio.albums = {};
-
-		let links = document.getElementsByTagName('a');
-		for(let link of links) {
-			if(link.href.indexOf('/album/') > 0) {
-				radio.albums[link.href] = null;
-			}
-		}
-
-		navigateToRandomAlbum();
-	});
+	controls.addEventListener('click', play);
 
 	document.body.appendChild(controls);
 }
 
+function skip() {
+	document.getElementsByTagName('audio')[0].pause();
+	navigateToRandomAlbum();
+}
 function addSkip() {
 	let controls = document.createElement('div');
 	controls.style.cssText = `
@@ -90,10 +139,7 @@ function addSkip() {
 
 	controls.innerHTML = "Skip";
 
-	controls.addEventListener('click', () => {
-		document.getElementsByTagName('audio')[0].pause();
-		navigateToRandomAlbum();
-	});
+	controls.addEventListener('click', skip);
 
 	document.body.appendChild(controls);
 }
@@ -120,6 +166,9 @@ function addResume() {
 	document.body.appendChild(controls);
 }
 
+function stop() {
+	removeItem('radio', () => window.location.href = radio.origin);
+}
 function addStop() {
 	let controls = document.createElement('div');
 	controls.style.cssText = `
@@ -134,9 +183,7 @@ function addStop() {
 
 	controls.innerHTML = "Stop";
 
-	controls.addEventListener('click', () => {
-		removeItem('radio', () => window.location.href = radio.origin);
-	});
+	controls.addEventListener('click', stop);
 
 	document.body.appendChild(controls);
 }
@@ -146,21 +193,31 @@ function initPlayback() {
 	addSkip();
 
 	let currentAlbum = radio.albums[window.location.href];
-	let availableTracks = document.querySelectorAll('.play_status:not(.disabled)');
-	let filteredTracks = availableTracks;
+	let playableTracks = document.querySelectorAll('.play_status:not(.disabled)');
+	let filteredTracks = playableTracks;
 
 	if(currentAlbum !== null) {
 		// Filter already played tracks
 		if(currentAlbum.played.length > 0) {
-			filteredTracks = Array.from(availableTracks).filter(
+			filteredTracks = Array.from(playableTracks).filter(
 				(track, idx) => (!currentAlbum.played.includes(idx))
 			);
 		}
 	}
 	else {
-		currentAlbum = radio.albums[window.location.href] = {
-			played: [],
-		};
+		// First time that this album is played
+
+		// No playable tracks
+		if(playableTracks.length === 0) {
+			delete radio.albums[window.location.href];
+			navigateToRandomAlbum();
+		}
+		else {
+			currentAlbum = radio.albums[window.location.href] = {
+				played: [],
+				playableTracks: playableTracks.length,
+			};
+		}
 	}
 
 	// Delay playing, otherwise errors because of overlapping pause/play events
@@ -173,13 +230,13 @@ function initPlayback() {
 		waitForTrackEnd(document.getElementsByTagName('audio')[0]);
 
 		// Figure out idx of track that is being played and store it
-		availableTracks.forEach((track, idx) => {
+		playableTracks.forEach((track, idx) => {
 			if(track === randomTrack)
 				currentAlbum.played.push(idx);
 		});
 
 		// All tracks will have been played when this one is done
-		if(currentAlbum.played.length >= availableTracks.length) {
+		if(currentAlbum.played.length >= playableTracks.length) {
 			delete radio.albums[window.location.href];
 		}
 
