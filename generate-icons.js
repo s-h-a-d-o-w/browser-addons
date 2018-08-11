@@ -4,6 +4,7 @@ const sharp = require('sharp');
 const sizes = [16, 32, 48, 96, 128];
 
 find.eachfile('icon.png', __dirname, function(file) {
+	console.log(`Processing ${file}`);
 	let sharpFile = sharp(file);
 	for(let size of sizes) {
 		sharpFile
