@@ -1,8 +1,7 @@
 'use strict';
 
 browser.runtime.onMessage.addListener(
-	function(message, sender, sendResponse) {
-
+	function(message) {
 		switch(message.cmd) {
 			case 'GET_ALBUMS_LIST':
 				return new Promise((resolve, reject) => {
@@ -57,7 +56,7 @@ let radio = {};
 function getAlbumList() {
 	return getItem('blocked')
 	.then((values) => {
-		let blocked = values.blocked;
+		let blocked = values.blocked || [];
 		let albums = {};
 		for(let link of document.getElementsByTagName('a')) {
 			if(link.href.indexOf('/album/') > 0 &&

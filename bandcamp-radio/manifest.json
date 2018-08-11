@@ -32,9 +32,9 @@
 
   "background" : {
     "scripts": [
+      "lib/hot-reload.js",
       "lib/browser-polyfill.min.js",
-      "background.js",
-      "hot-reload.js"
+      "background.js"
     ]
   },
 
