@@ -43,7 +43,7 @@
       "matches": ["*://*.bandcamp.com/*"],
       "js": [
         "lib/browser-polyfill.min.js",
-        "bandcamp-radio.js"
+        "content-script.js"
       ]
     }
   ]

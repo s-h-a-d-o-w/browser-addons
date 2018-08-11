@@ -245,6 +245,15 @@ function initPlayback() {
 		let randomTrack = filteredTracks[Math.floor(Math.random() * filteredTracks.length)];
 		randomTrack.click();
 
+		setTimeout(() => browser.runtime.sendMessage({
+			cmd: 'SET_ACTION_TITLE',
+			// TODO: Better way of getting Artist/Title that's not dependent on DOM structure?
+			title: 'Playing: ' +
+				document.querySelectorAll('[itemprop="byArtist"]')[0].childNodes[1].innerHTML +
+				' / '+
+				document.getElementsByClassName('title_link')[0].childNodes[0].innerHTML,
+		}), 500);
+
 		// Navigate to random album once this track is done
 		waitForTrackEnd(document.getElementsByTagName('audio')[0]);
 

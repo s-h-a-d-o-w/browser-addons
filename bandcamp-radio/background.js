@@ -1,3 +1,9 @@
+// Set browser action props based on messages from content script
+chrome.runtime.onMessage.addListener((message) => {
+	if(message.cmd === 'SET_ACTION_TITLE')
+		browser.browserAction.setTitle({title: message.title});
+});
+
 function isPlaying() {
 	return new Promise((resolve, reject) => {
 		browser.storage.local.get('radio')
@@ -9,6 +15,7 @@ function isPlaying() {
 	});
 }
 
+// Enable/disable browser action
 browser.runtime.onInstalled.addListener(function() {
 	browser.browserAction.disable();
 	browser.tabs.onActivated.addListener(function(activeInfo) {
