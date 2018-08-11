@@ -1,19 +1,20 @@
 'use strict';
 
-chrome.runtime.onMessage.addListener(
-	function(request, sender, sendResponse) {
+browser.runtime.onMessage.addListener(
+	function(message, sender, sendResponse) {
 
-		switch(request.cmd) {
+		switch(message.cmd) {
 			case 'GET_ALBUMS_LIST':
-				if(document.body.innerHTML.indexOf("/album/") < document.body.innerHTML.lastIndexOf("/album/")) {
-					sendResponse(getAlbumList());
-				}
-				else {
-					sendResponse('No albums on this page.');
-				}
-				break;
+				return new Promise((resolve, reject) => {
+					if(document.body.innerHTML.indexOf("/album/") < document.body.innerHTML.lastIndexOf("/album/")) {
+						resolve(getAlbumList());
+					}
+					else {
+						reject('No albums on this page.');
+					}
+				});
 			case 'PLAY':
-				radio.tabid = request.tabid;
+				radio.tabid = message.tabid;
 				play();
 				break;
 			case 'SKIP':
@@ -32,32 +33,42 @@ chrome.runtime.onMessage.addListener(
 
 // Unify FF and Chrome
 // =======================================================
-let runtime = typeof browser === 'undefined' ? chrome.runtime : browser;
+let runtime = typeof browser === 'undefined' ? browser.runtime : browser;
 // =======================================================
 
-function setItem(key, value, cb) {
-	chrome.storage.local.set({[key]: value}, cb);
+function setItem(key, value) {
+	let item = {};
+	item[key] = value;
+	return browser.storage.local.set(item);
+	//return browser.storage.local.set({[key]: value});
 }
 
-function getItem(key, cb) {
-	chrome.storage.local.get(key, cb);
+function getItem(key) {
+	return browser.storage.local.get(key);
 }
 
-function removeItem(key, cb) {
-	chrome.storage.local.remove(key, cb);
+function removeItem(key) {
+	return browser.storage.local.remove(key);
 }
 
 let radio = {};
 
 
 function getAlbumList() {
-	let albums = {};
-	for(let link of document.getElementsByTagName('a')) {
-		if(link.href.indexOf('/album/') > 0 && link.href.indexOf('bandcamp.com') > 0) {
-			albums[link.href] = null;
+	return getItem('blocked')
+	.then((values) => {
+		let blocked = values.blocked;
+		let albums = {};
+		for(let link of document.getElementsByTagName('a')) {
+			if(link.href.indexOf('/album/') > 0 &&
+				link.href.indexOf('bandcamp.com') > 0 &&
+				!blocked.includes(link.href)) {
+				albums[link.href] = null;
+			}
 		}
-	}
-	return albums;
+		return albums;
+	})
+	.catch(console.error);
 }
 
 function navigateToRandomAlbum() {
@@ -68,9 +79,11 @@ function navigateToRandomAlbum() {
 		albumLinks.splice(albumLinks.indexOf(window.location.href), 1);
 
 	radio.playing = albumLinks[Math.floor(Math.random() * albumLinks.length)];
-	setItem('radio', radio, () => {
+	setItem('radio', radio)
+	.then(() => {
 		window.location.href = radio.playing;
-	});
+	})
+	.catch(console.error);
 }
 
 function waitForTrackEnd(audioEl) {
@@ -86,21 +99,26 @@ function waitForTrackEnd(audioEl) {
 }
 
 function block() {
-	getItem('blocked', (values) => {
+	getItem('blocked')
+	.then((values) => {
 		let blocked = values.blocked || [];
 		blocked.push(window.location.href);
-		setItem('blocked', blocked, () => {
+		setItem('blocked', blocked)
+		.then(() => {
 			delete radio.albums[window.location.href];
 			skip();
 		})
-	});
+		.catch(console.error);
+	})
+	.catch(console.error);
 }
 
 function play() {
 	radio.origin = window.location.href;
-	radio.albums = getAlbumList();
-
-	navigateToRandomAlbum();
+	getAlbumList().then((albums) => {
+		radio.albums = albums;
+		navigateToRandomAlbum();
+	});
 }
 function addPlay() {
 	let controls = document.createElement('div');
@@ -167,7 +185,9 @@ function addResume() {
 }
 
 function stop() {
-	removeItem('radio', () => window.location.href = radio.origin);
+	removeItem('radio')
+	.then(() => window.location.href = radio.origin)
+	.catch(console.error);
 }
 function addStop() {
 	let controls = document.createElement('div');
@@ -240,13 +260,14 @@ function initPlayback() {
 			delete radio.albums[window.location.href];
 		}
 
-		setItem('radio', radio);
+		setItem('radio', radio).catch(console.error);
 	}, 500);
 }
 
 (() => {
-	getItem('radio', (values) => {
-		if(chrome.runtime.lastError || Object.keys(values).length === 0) {
+	getItem('radio')
+	.then((values) => {
+		if(browser.runtime.lastError || Object.keys(values).length === 0) {
 			// At least two album links were found
 			if(document.body.innerHTML.indexOf("/album/") < document.body.innerHTML.lastIndexOf("/album/")) {
 				addPlay();
@@ -264,5 +285,6 @@ function initPlayback() {
 				}
 			}
 		}
-	});
+	})
+	.catch(console.error);
 })();

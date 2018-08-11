@@ -3,14 +3,21 @@ let cmdSkip = document.getElementById('cmdSkip');
 let cmdStop = document.getElementById('cmdStop');
 let cmdBlock = document.getElementById('cmdBlock');
 
+function errorHandler(error) {
+	body.innerHTML = error;
+}
+
 window.onload = () => {
 	//document.getElementById("tabid").innerHTML = new Date();
-	chrome.storage.local.get('blocked', (values) => {
+	browser.storage.local.get('blocked')
+	.then((values) => {
 		let blocked = values.blocked || [];
 		document.getElementById('blocked').innerHTML = '<strong>Blocked</strong><br>' + blocked.join('<br>');
-	});
+	})
+	.catch(errorHandler);
 
-	chrome.storage.local.get('radio', (values) => {
+	browser.storage.local.get('radio')
+	.then((values) => {
 		let radio = values.radio;
 		if(radio && radio.hasOwnProperty('playing')) {
 			cmdPlay.disabled = true;
@@ -33,28 +40,29 @@ window.onload = () => {
 			), '<strong>Albums</strong><br>');
 
 			cmdSkip.addEventListener('click', () => {
-				chrome.tabs.sendMessage(radio.tabid, {
+				browser.tabs.sendMessage(radio.tabid, {
 					cmd: 'SKIP'
 				});
 				window.close();
 			});
 
 			cmdStop.addEventListener('click', () => {
-				chrome.tabs.sendMessage(radio.tabid, {
+				browser.tabs.sendMessage(radio.tabid, {
 					cmd: 'STOP'
 				});
 				window.close();
 			});
 
 			cmdBlock.addEventListener('click', () => {
-				chrome.tabs.sendMessage(radio.tabid, {
+				browser.tabs.sendMessage(radio.tabid, {
 					cmd: 'BLOCK'
 				});
 				window.close();
 			});
 		}
 		else {
-			chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+			browser.tabs.query({active: true, currentWindow: true})
+			.then((tabs) => {
 				let tab = tabs[0];
 
 				cmdPlay.disabled = false;
@@ -62,21 +70,25 @@ window.onload = () => {
 				cmdStop.disabled = true;
 
 				// Retrieve album list
-				chrome.tabs.sendMessage(tab.id, {
+				browser.tabs.sendMessage(tab.id, {
 					cmd: 'GET_ALBUMS_LIST'
-				}, (response) => {
+				})
+				.then((response) => {
 					document.getElementById("albums").innerHTML = '<strong>Detected</strong><br>' +
 						Object.keys(response).join('<br>');
-				});
+				})
+				.catch(errorHandler);
 
 				cmdPlay.addEventListener('click', () => {
-					chrome.tabs.sendMessage(tab.id, {
+					browser.tabs.sendMessage(tab.id, {
 						cmd: 'PLAY',
 						tabid: tab.id
 					});
 					window.close();
 				});
-			});
+			})
+			.catch(errorHandler);
 		}
-	});
+	})
+	.catch(errorHandler);
 };
