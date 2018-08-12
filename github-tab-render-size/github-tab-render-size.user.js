@@ -10,7 +10,8 @@
 		style.innerHTML = `
 * {
 -moz-tab-size: ${size} !important;
-tab-size: ${size} !important;
+  -o-tab-size: ${size} !important;
+     tab-size: ${size} !important;
 }`;
 	}
 
