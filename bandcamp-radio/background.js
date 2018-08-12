@@ -19,7 +19,7 @@ function isPlaying() {
 browser.runtime.onInstalled.addListener(function() {
 	browser.browserAction.disable();
 	browser.tabs.onActivated.addListener(function(activeInfo) {
-		// console.log('activeInfo', activeInfo);
+		console.log('activeInfo', activeInfo);
 		isPlaying()
 		.then((playing) => {
 			if(playing) {
@@ -39,8 +39,8 @@ browser.runtime.onInstalled.addListener(function() {
 		.catch(console.error);
 	});
 	browser.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-		// console.log('changeInfo', changeInfo);
-		// console.log('tab', tab);
+		console.log('changeInfo', changeInfo);
+		console.log('tab', tab);
 		isPlaying()
 		.then((playing) => {
 			if(playing) {

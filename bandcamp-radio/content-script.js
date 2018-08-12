@@ -171,7 +171,14 @@ function addResume() {
 		left: 0px;
 		z-index: 1000;
 		cursor: pointer;
-		background-color:white`;
+		background-color:white;
+		
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 3em;
+		opacity: 0.9;
+		`;
 
 	controls.innerHTML = "Resume Playback";
 
@@ -282,16 +289,41 @@ function initPlayback() {
 			}
 		}
 		else {
-			radio = values.radio;
+			setTimeout(() => {
+				radio = values.radio;
 
-			if(window.location.href === radio.playing) {
-				if(document.referrer === "") {
-					addResume();
-				}
-				else {
+				// TODO: Should maybe also check whether tabid is the right one, so that
+				// the same album can be opened in other tabs aside from the one that is playing.
+				if(window.location.href === radio.playing) {
 					initPlayback();
+
+					/*
+					// Trigger play() just to test whether user has interacted with the DOM yet.
+					// If not (e.g. user just started browser and continued their session), it will throw.
+					let audio = document.getElementsByTagName('audio')[0];
+					audio.muted = true;
+					audio.addEventListener('playing', () => {
+						setTimeout(() => {
+							audio.pause();
+							audio.muted = false;
+							initPlayback();
+						}, 3000);
+
+						console.log('SUCCESS!');
+					});
+
+					audio.play()
+					.catch((e) => {
+						// PROBLEM: This is also triggered when navigating away from page!
+						// Also: .then() is apparently not triggered in Chrome when playback has started.
+						// (Maybe only once it's finished?)
+						console.error(e);
+						audio.muted = false;
+						addResume();
+					});
+					*/
 				}
-			}
+			}, 1000);
 		}
 	})
 	.catch(console.error);

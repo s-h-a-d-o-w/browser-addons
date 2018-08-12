@@ -4,15 +4,48 @@ let cmdStop = document.getElementById('cmdStop');
 let cmdBlock = document.getElementById('cmdBlock');
 
 function errorHandler(error) {
-	body.innerHTML = error;
+	document.body.innerHTML = error;
+	console.error(error);
 }
 
 window.onload = () => {
-	//document.getElementById("tabid").innerHTML = new Date();
 	browser.storage.local.get('blocked')
 	.then((values) => {
+		// Render block list
 		let blocked = values.blocked || [];
-		document.getElementById('blocked').innerHTML = '<strong>Blocked</strong><br>' + blocked.join('<br>');
+		let blockedEl = document.getElementById('blocked');
+		blockedEl.innerHTML = '<strong>Blocked</strong><br>' + blocked.join('<br>') + '<br>';
+
+		// Saving of block list
+		let saveList = document.createElement('a');
+		saveList.innerHTML = 'Save ';
+		if(blocked.length > 0) {
+			let blob = new Blob([blocked.join('\n')], {type: 'text/plain'});
+			saveList.href = URL.createObjectURL(blob);
+			saveList.download = 'bandcamp-radio-blocklist.txt';
+			blockedEl.appendChild(saveList);
+		}
+
+		// Loading of block list
+		let input = document.createElement('input');
+		input.type = 'file';
+		input.accept = 'text/plain';
+		input.style.opacity = 0;
+		input.addEventListener('change', () => {
+			let reader = new FileReader();
+			reader.addEventListener("loadend", function() {
+				browser.storage.local.set({blocked: reader.result.split('\n')})
+				.then(() => console.log('Successfully loaded'))
+				.catch(console.error);
+			});
+			reader.readAsText(input.files[0]);
+		});
+		let loadList = document.createElement('a');
+		loadList.innerHTML = 'Load';
+		loadList.href = '#';
+		loadList.addEventListener('click', () => input.click());
+		blockedEl.appendChild(loadList);
+		blockedEl.appendChild(input);
 	})
 	.catch(errorHandler);
 
