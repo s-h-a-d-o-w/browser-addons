@@ -1,8 +1,3 @@
-// Unify FF and Chrome
-// =======================================================
-let runtime = typeof browser === 'undefined' ? chrome.runtime : browser;
-// =======================================================
-
 (() => {
 	'use strict';
 	const DEFAULT_TAB_SIZE = 4;
@@ -26,7 +21,7 @@ tab-size: ${size} !important;
 
 	let divTextRenderSize = document.createElement("div");
 	divTextRenderSize.innerHTML = 'Tab render size:';
-  divTextRenderSize.style.cssText = `display:inline-block; vertical-align:middle`;
+	divTextRenderSize.style.cssText = `display:inline-block; vertical-align:middle`;
 
 	let selRenderSize = document.createElement("select");
 	selRenderSize.className = 'form-select select-sm js-code-indent-width';
