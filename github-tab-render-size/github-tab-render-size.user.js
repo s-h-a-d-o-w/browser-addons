@@ -7,7 +7,7 @@
 	document.head.appendChild(style);
 
 	function setTabSizeStyles(size) {
-		style.innerHTML = `
+		style.textContent = `
 * {
 -moz-tab-size: ${size} !important;
   -o-tab-size: ${size} !important;
@@ -21,7 +21,7 @@
 	divTabRendering.style.cssText = 'display:inline-block; margin-right:10px';
 
 	let divTextRenderSize = document.createElement("div");
-	divTextRenderSize.innerHTML = 'Tab render size:';
+	divTextRenderSize.textContent = 'Tab render size:';
 	divTextRenderSize.style.cssText = `display:inline-block; vertical-align:middle`;
 
 	let selRenderSize = document.createElement("select");
@@ -31,7 +31,7 @@
 	[1, 2, 4, 8].forEach((el) => {
 		let option = document.createElement("option");
 		option.value = el;
-		option.innerHTML = el;
+		option.textContent = el;
 		selRenderSize.add(option);
 	});
 
